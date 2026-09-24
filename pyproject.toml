@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "intro-footage-matcher"
+version = "0.1.0"
+description = "Local-first intro-to-gameplay footage matching prototype"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+ml = [
+  "faster-whisper>=1.1",
+  "numpy>=2.0",
+  "pillow>=10.0",
+  "sentence-transformers>=3.0",
+  "transformers>=4.45",
+]
+test = ["pytest>=8.0"]
+
+[project.scripts]
+ifm = "intro_footage_matcher.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+

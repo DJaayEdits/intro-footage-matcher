@@ -1,0 +1,11 @@
+from __future__ import annotations
+
+
+def format_timecode(seconds: float) -> str:
+    """Format source seconds as HH:MM:SS.mmm with stable rounding."""
+    total_ms = max(0, round(float(seconds) * 1000))
+    hours, remainder = divmod(total_ms, 3_600_000)
+    minutes, remainder = divmod(remainder, 60_000)
+    secs, millis = divmod(remainder, 1000)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}.{millis:03d}"
+
