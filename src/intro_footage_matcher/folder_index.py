@@ -4,6 +4,8 @@ import hashlib
 import json
 import shutil
 import subprocess
+import wave
+from array import array
 from pathlib import Path
 from typing import Any
 
@@ -139,9 +141,26 @@ def _transcribe_many(items: list[tuple[Path, Path]]) -> dict[str, Any]:
     model = WhisperModel(_local_whisper_model(), device="cpu", compute_type="int8")
     results: dict[str, Any] = {}
 
+    import numpy as np
+
     for source, wav in items:
+        # We create these files ourselves as 16 kHz mono PCM WAV. Load the
+        # samples directly and pass a float32 NumPy array to faster-whisper.
+        # This intentionally bypasses PyAV's file decoder so transcription is
+        # not coupled to PyAV's av.open keyword compatibility.
+        with wave.open(str(wav), "rb") as audio_file:
+            if (
+                audio_file.getsampwidth() != 2
+                or audio_file.getnchannels() != 1
+                or audio_file.getframerate() != 16000
+            ):
+                raise RuntimeError(f"Unexpected cached WAV format: {wav}")
+            samples = array("h")
+            samples.frombytes(audio_file.readframes(audio_file.getnframes()))
+        audio = np.asarray(samples, dtype=np.float32) / 32768.0
+
         iterator, info = model.transcribe(
-            str(wav),
+            audio,
             language="en",
             beam_size=5,
             vad_filter=True,
