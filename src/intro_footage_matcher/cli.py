@@ -7,6 +7,7 @@ from pathlib import Path
 from .folder_index import build_folder_index
 from .pipeline import STAGES, inspect_sources, run_analysis
 from .report import render_report
+from .voiceover import write_voiceover_outputs
 
 
 def _project_root() -> Path:
@@ -33,6 +34,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip local Whisper transcription of fit/ and rusher/ source videos",
     )
+
+    vo_parser = subparsers.add_parser(
+        "transcribe-voiceover",
+        help="Transcribe an edited voiceover locally with word timestamps",
+    )
+    vo_parser.add_argument("--voiceover", required=True, type=Path)
 
     for child in (inspect_parser, analyze_parser):
         child.add_argument("--intro", required=True, type=Path)
@@ -73,6 +80,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(f"Index written: {root / 'reports/footage-index.json'}")
         print(json.dumps(result["counts"], indent=2))
+        return 0
+
+    if args.command == "transcribe-voiceover":
+        result = write_voiceover_outputs(root, args.voiceover)
+        print(f"Transcript JSON: {result['json']}")
+        print(f"Transcript text: {result['text']}")
+        print(f"Segments: {result['segments']}")
+        print(f"Duration: {result['duration']:.2f}s")
         return 0
 
     matches = root / "reports" / "matches.json"
