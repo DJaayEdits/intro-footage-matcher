@@ -57,6 +57,47 @@ def _topic_boost(text: str, relative_path: str) -> float:
     return boost
 
 
+
+def _fitmc_section_adjustment(record_start: float, text: str, relative_path: str) -> float:
+    """Project-specific editorial routing for the FitMC documentary."""
+    q = _normalize_story_text(text)
+    p = relative_path.lower()
+    is_general = p.startswith("general 2b2t clips/")
+    is_rusher = p.startswith("rusher/") or any(
+        key in p for key in ("teamveteran", "largest battle", "nuking rusher", "diamond rushers")
+    )
+    is_fitlantis = "fitlantis" in p
+    is_personal = "personal story" in p
+
+    if record_start < 162.0:
+        if is_personal:
+            return 0.10
+        if is_general:
+            return 0.08
+        if is_fitlantis:
+            return -0.08
+        return 0.0
+
+    if record_start < 409.0:
+        if is_rusher:
+            return 0.18
+        if is_fitlantis:
+            return -0.20
+        return 0.03 if is_general else -0.03
+
+    if record_start < 500.0:
+        if is_fitlantis:
+            return 0.30
+        return -0.10
+
+    if is_general:
+        return 0.10
+    if is_personal:
+        return 0.08
+    if is_fitlantis and not re.search(r"base|grief|destroy|fame|bounty", q):
+        return -0.10
+    return 0.0
+
 def _confidence(score: float, *, evidence: str) -> str:
     if evidence == "specific-transcript":
         if score >= 0.78:
@@ -70,7 +111,7 @@ def _confidence(score: float, *, evidence: str) -> str:
 
 
 def _clip_range(center: float, beat_duration: float, media_duration: float) -> tuple[float, float]:
-    length = max(3.0, min(8.0, beat_duration))
+    length = max(3.0, min(9.0, beat_duration))
     start = max(0.0, center - min(1.0, length * 0.2))
     end = min(media_duration, start + length)
     if end - start < length and media_duration >= length:
@@ -245,7 +286,8 @@ def build_voiceover_matches(
                 row = specific[int(idx)]
                 semantic = float(semantic_scores[int(idx)])
                 route = _topic_boost(beat.text, row["relative_path"])
-                score = min(1.0, 0.82 * semantic + route + (0.08 if route > 0 else 0.03))
+                section = _fitmc_section_adjustment(beat.start, beat.text, row["relative_path"])
+                score = max(0.0, min(1.0, 0.82 * semantic + route + section + (0.08 if route > 0 else 0.03)))
                 candidates.append({
                     "source": row["path"],
                     "relative_path": row["relative_path"],
@@ -254,7 +296,7 @@ def build_voiceover_matches(
                     "evidence": "specific-transcript",
                     "source_transcript": row["text"],
                     "score": score,
-                    "reason": f"specific source transcript similarity={semantic:.3f}; topic boost={route:.2f}",
+                    "reason": f"specific source transcript similarity={semantic:.3f}; topic boost={route:.2f}; section adjustment={section:+.2f}",
                 })
 
         if len(frame_rows):
@@ -264,12 +306,13 @@ def build_voiceover_matches(
                 row = frame_rows[int(idx)]
                 raw = float(row_scores[int(idx)])
                 route = _topic_boost(beat.text, row["relative_path"])
+                section = _fitmc_section_adjustment(beat.start, beat.text, row["relative_path"])
                 # CLIP cosine is useful for ordering, but is not a calibrated probability.
                 visual = max(0.0, min(1.0, (raw + 0.1) / 0.55))
                 # Do not globally favor Fit/Rusher files: generic B-roll should win
                 # generic narration when its visual evidence is genuinely stronger.
                 # Named story routing is handled explicitly by _topic_boost().
-                score = min(1.0, 0.72 * visual + route)
+                score = max(0.0, min(1.0, 0.72 * visual + route + section))
                 start, end = _clip_range(
                     row["time"],
                     beat.end - beat.start,
@@ -284,10 +327,22 @@ def build_voiceover_matches(
                     "frame_time": round(row["time"], 3),
                     "frame_path": row["frame_path"],
                     "score": score,
-                    "reason": f"visual CLIP similarity={raw:.3f}; topic boost={route:.2f}",
+                    "reason": f"visual CLIP similarity={raw:.3f}; topic boost={route:.2f}; section adjustment={section:+.2f}",
                 })
 
-        candidates.sort(
+        adjusted_candidates = []
+        for item in candidates:
+            adjusted = dict(item)
+            overlaps = any(
+                max(adjusted["source_start"], a) < min(adjusted["source_end"], b)
+                for a, b in last_used.get(adjusted["source"], [])
+            )
+            if overlaps:
+                adjusted["score"] *= 0.82
+                adjusted["reason"] += "; overlap penalty"
+            adjusted_candidates.append(adjusted)
+
+        adjusted_candidates.sort(
             key=lambda item: (
                 item["score"],
                 1 if item["evidence"] == "specific-transcript" else 0,
@@ -298,23 +353,15 @@ def build_voiceover_matches(
         chosen = None
         alternates = []
         seen = set()
-        for item in candidates:
+        for item in adjusted_candidates:
             key = (item["source"], round(item["source_start"], 1), item["evidence"])
             if key in seen:
                 continue
             seen.add(key)
-            overlaps = any(
-                max(item["source_start"], a) < min(item["source_end"], b)
-                for a, b in last_used.get(item["source"], [])
-            )
-            adjusted = dict(item)
-            if overlaps:
-                adjusted["score"] *= 0.90
-                adjusted["reason"] += "; overlap penalty"
             if chosen is None:
-                chosen = adjusted
+                chosen = item
             elif len(alternates) < top_k - 1:
-                alternates.append(adjusted)
+                alternates.append(item)
             if chosen is not None and len(alternates) >= top_k - 1:
                 break
 
