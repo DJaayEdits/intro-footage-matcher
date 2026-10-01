@@ -127,6 +127,12 @@ def _load_or_build_clip_embeddings(
         pixel_values = inputs["pixel_values"].to(device)
         with torch.inference_mode():
             features = model.get_image_features(pixel_values=pixel_values)
+        if hasattr(features, "pooler_output"):
+            features = features.pooler_output
+        elif hasattr(features, "image_embeds"):
+            features = features.image_embeds
+        elif hasattr(features, "last_hidden_state"):
+            features = features.last_hidden_state[:, 0, :]
         arr = features.detach().cpu().numpy().astype(np.float32)
         chunks.append(_norm_rows(arr))
         if offset == 0 or (offset // batch_size) % 25 == 0:
@@ -154,6 +160,12 @@ def _encode_clip_queries(texts: list[str]) -> np.ndarray:
     attention_mask = inputs["attention_mask"].to(device)
     with torch.inference_mode():
         features = model.get_text_features(input_ids=input_ids, attention_mask=attention_mask)
+    if hasattr(features, "pooler_output"):
+        features = features.pooler_output
+    elif hasattr(features, "text_embeds"):
+        features = features.text_embeds
+    elif hasattr(features, "last_hidden_state"):
+        features = features.last_hidden_state[:, 0, :]
     return _norm_rows(features.detach().cpu().numpy().astype(np.float32))
 
 
