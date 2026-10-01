@@ -7,7 +7,8 @@ Expected JSON fields:
 {
   "project_name": "Parker Wolf FitMC",
   "timeline_name": "MAIN SEQUENCE",
-  "video_track": 1,
+  "video_track": 2,
+  "voiceover_track_index": 1,
   "matches": [
     {
       "record_start_seconds": 0.0,
@@ -107,7 +108,13 @@ def main():
 
     fps = float(project.GetSetting("timelineFrameRate"))
     timeline_start = timeline.GetStartFrame()
-    video_track = int(data.get("video_track", 1))
+    video_track = int(data.get("video_track", 2))
+    voiceover_track = int(data.get("voiceover_track_index", 1))
+
+    voiceover_items = timeline.GetItemListInTrack("audio", voiceover_track) or []
+    if not voiceover_items:
+        raise RuntimeError(f"No voiceover clips found on A{voiceover_track}")
+    voiceover_base_frame = min(int(item.GetStart()) for item in voiceover_items)
 
     while timeline.GetTrackCount("video") < video_track:
         if not timeline.AddTrack("video"):
@@ -139,13 +146,28 @@ def main():
         if duration <= 0:
             raise ValueError(f"Match {i} has non-positive duration")
 
-        source_start_frame = frames(source_start, fps)
-        record_frame = timeline_start + frames(record_start, fps)
+        media_item = item_for(match["source"])
+        props = media_item.GetClipProperty() or {}
+        try:
+            source_fps = float(props.get("FPS") or fps)
+        except (TypeError, ValueError):
+            source_fps = fps
+        try:
+            clip_start_frame = int(float(props.get("Start") or 0))
+        except (TypeError, ValueError):
+            clip_start_frame = 0
+
+        source_start_frame = clip_start_frame + frames(source_start, source_fps)
+        source_duration = frames(record_end - record_start, source_fps)
+        if source_duration <= 0:
+            raise ValueError(f"Match {i} has non-positive source duration")
+
+        record_frame = voiceover_base_frame + frames(record_start, fps)
 
         result = media_pool.AppendToTimeline([{
-            "mediaPoolItem": item_for(match["source"]),
+            "mediaPoolItem": media_item,
             "startFrame": source_start_frame,
-            "endFrame": source_start_frame + duration - 1,
+            "endFrame": source_start_frame + source_duration,
             "mediaType": 1,
             "trackIndex": int(match.get("video_track", video_track)),
             "recordFrame": record_frame,
@@ -157,7 +179,7 @@ def main():
         note = match.get("note")
         if label or note:
             timeline.AddMarker(
-                frames(record_start, fps),
+                (voiceover_base_frame - timeline_start) + frames(record_start, fps),
                 str(match.get("marker_color", "Blue")),
                 str(label or f"Match {i:03d}"),
                 str(note or ""),
@@ -171,7 +193,7 @@ def main():
 
     print(
         f"PLACED {placed} matched video clips on V{video_track} "
-        f"without changing the voiceover"
+        f"without changing the voiceover; aligned to A{voiceover_track} start"
     )
 
 
