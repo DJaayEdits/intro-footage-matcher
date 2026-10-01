@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .folder_index import build_folder_index
+from .folder_match import build_voiceover_matches
 from .pipeline import STAGES, inspect_sources, run_analysis
 from .report import render_report
 from .voiceover import write_voiceover_outputs
@@ -40,6 +41,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Transcribe an edited voiceover locally with word timestamps",
     )
     vo_parser.add_argument("--voiceover", required=True, type=Path)
+
+    match_parser = subparsers.add_parser(
+        "match-voiceover",
+        help="Match a timestamped voiceover transcript against an indexed footage folder",
+    )
+    match_parser.add_argument("--voiceover", required=True, type=Path)
+    match_parser.add_argument("--index", required=True, type=Path)
+    match_parser.add_argument("--top-k", type=int, default=5)
 
     for child in (inspect_parser, analyze_parser):
         child.add_argument("--intro", required=True, type=Path)
@@ -88,6 +97,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Transcript text: {result['text']}")
         print(f"Segments: {result['segments']}")
         print(f"Duration: {result['duration']:.2f}s")
+        return 0
+
+    if args.command == "match-voiceover":
+        result = build_voiceover_matches(root, args.voiceover, args.index, top_k=args.top_k)
+        print(f"Match candidates: {root / 'reports/fitmc-match-candidates.json'}")
+        print(f"Beats: {result['beat_count']}")
         return 0
 
     matches = root / "reports" / "matches.json"
