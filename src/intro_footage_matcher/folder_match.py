@@ -18,14 +18,32 @@ def _norm_rows(values: np.ndarray) -> np.ndarray:
     return values / denom
 
 
+def _normalize_story_text(text: str) -> str:
+    value = text.lower()
+    replacements = {
+        "russia war": "rusher war",
+        "camping russia": "camping rusher",
+        "chromecroster": "chromecrusher",
+        "chrome crusher": "chromecrusher",
+        "fieh": "fit",
+        "fitt": "fit",
+        "bit knew": "fit knew",
+        "chords": "coords",
+        "cords": "coords",
+    }
+    for old, new in replacements.items():
+        value = value.replace(old, new)
+    return value
+
+
 def _topic_boost(text: str, relative_path: str) -> float:
-    q = text.lower()
+    q = _normalize_story_text(text)
     p = relative_path.lower()
     boost = 0.0
 
     rules = [
         (r"fitlantis|ocean monument|bedrock|chrome ?crusher|coords?|team aurora", ("fitlantis",), 0.42),
-        (r"camping rusher|rusher war|rushers?|veterans? vs|queue", ("rusher/", "teamveteran", "largest battle"), 0.34),
+        (r"camping rusher|rusher war|rushers?|veterans? vs|queue|spawn defenses?|leader of the veterans|veteran side", ("rusher/", "teamveteran", "largest battle"), 0.38),
         (r"summermelon", ("summermelon",), 0.45),
         (r"largest battle|battle.*server history", ("largest battle",), 0.42),
         (r"personal story|early days|original player|built bases|friends with", ("personal story",), 0.28),
@@ -184,7 +202,7 @@ def build_voiceover_matches(
     videos = [v for v in index["videos"] if not v.get("error")]
 
     specific = _specific_candidates(videos)
-    beat_texts = [b.text for b in beats]
+    beat_texts = [_normalize_story_text(b.text) for b in beats]
 
     specific_matrix = np.empty((0, 384), dtype=np.float32)
     beat_semantic = np.empty((len(beats), 384), dtype=np.float32)
@@ -227,7 +245,7 @@ def build_voiceover_matches(
                 row = specific[int(idx)]
                 semantic = float(semantic_scores[int(idx)])
                 route = _topic_boost(beat.text, row["relative_path"])
-                score = min(1.0, 0.76 * semantic + route)
+                score = min(1.0, 0.82 * semantic + route + (0.08 if route > 0 else 0.03))
                 candidates.append({
                     "source": row["path"],
                     "relative_path": row["relative_path"],
@@ -248,8 +266,10 @@ def build_voiceover_matches(
                 route = _topic_boost(beat.text, row["relative_path"])
                 # CLIP cosine is useful for ordering, but is not a calibrated probability.
                 visual = max(0.0, min(1.0, (raw + 0.1) / 0.55))
-                category_bonus = 0.06 if row["category"] in {"fit", "rusher"} else 0.0
-                score = min(1.0, 0.72 * visual + route + category_bonus)
+                # Do not globally favor Fit/Rusher files: generic B-roll should win
+                # generic narration when its visual evidence is genuinely stronger.
+                # Named story routing is handled explicitly by _topic_boost().
+                score = min(1.0, 0.72 * visual + route)
                 start, end = _clip_range(
                     row["time"],
                     beat.end - beat.start,
@@ -267,7 +287,13 @@ def build_voiceover_matches(
                     "reason": f"visual CLIP similarity={raw:.3f}; topic boost={route:.2f}",
                 })
 
-        candidates.sort(key=lambda item: item["score"], reverse=True)
+        candidates.sort(
+            key=lambda item: (
+                item["score"],
+                1 if item["evidence"] == "specific-transcript" else 0,
+            ),
+            reverse=True,
+        )
 
         chosen = None
         alternates = []
