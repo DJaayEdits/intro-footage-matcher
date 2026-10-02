@@ -30,6 +30,7 @@ Set before exec():
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 
@@ -116,10 +117,6 @@ def main():
         raise RuntimeError(f"No voiceover clips found on A{voiceover_track}")
     voiceover_base_frame = min(int(item.GetStart()) for item in voiceover_items)
 
-    while timeline.GetTrackCount("video") < video_track:
-        if not timeline.AddTrack("video"):
-            raise RuntimeError(f"Could not create V{video_track}")
-
     media_pool = project.GetMediaPool()
     root = media_pool.GetRootFolder()
     target = get_or_create_bin(media_pool, root)
@@ -135,6 +132,19 @@ def main():
     matches = data.get("matches") or []
     if not matches:
         raise RuntimeError("No matches in JSON")
+
+    repo_root = Path(str(match_path)).expanduser().resolve().parent.parent
+    sys.path.insert(0, str(repo_root / "src"))
+    from intro_footage_matcher.frame_usage import require_unique_source_frames
+    source_fps_by_path = {
+        source: float(item_for(source).GetClipProperty("FPS"))
+        for source in {match["source"] for match in matches}
+    }
+    require_unique_source_frames(matches, source_fps_by_path, fps)
+
+    while timeline.GetTrackCount("video") < video_track:
+        if not timeline.AddTrack("video"):
+            raise RuntimeError(f"Could not create V{video_track}")
 
     placed = 0
     for i, match in enumerate(matches, 1):

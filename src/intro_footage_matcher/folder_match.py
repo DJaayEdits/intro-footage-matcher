@@ -10,6 +10,7 @@ import numpy as np
 
 from .beats import build_intro_beats
 from .ranking import embed_texts
+from .frame_usage import choose_unused_candidate
 
 
 def _norm_rows(values: np.ndarray) -> np.ndarray:
@@ -350,23 +351,23 @@ def build_voiceover_matches(
             reverse=True,
         )
 
-        chosen = None
+        displayed_end = beats[beat_index + 1].start if beat_index + 1 < len(beats) else float(voiceover["duration"])
+        try:
+            chosen = choose_unused_candidate(
+                adjusted_candidates,
+                duration=displayed_end - beat.start,
+                used=last_used,
+                source_durations=duration_by_path,
+            )
+        except ValueError as exc:
+            raise RuntimeError(f"No unused candidate found for beat {beat.id}: {exc}") from exc
         alternates = []
-        seen = set()
+        seen = {(chosen["source"], round(chosen["source_start"], 1), chosen["evidence"])}
         for item in adjusted_candidates:
             key = (item["source"], round(item["source_start"], 1), item["evidence"])
-            if key in seen:
-                continue
-            seen.add(key)
-            if chosen is None:
-                chosen = item
-            elif len(alternates) < top_k - 1:
+            if key not in seen and len(alternates) < top_k - 1:
                 alternates.append(item)
-            if chosen is not None and len(alternates) >= top_k - 1:
-                break
-
-        if chosen is None:
-            raise RuntimeError(f"No candidate found for beat {beat.id}")
+                seen.add(key)
 
         last_used.setdefault(chosen["source"], []).append((chosen["source_start"], chosen["source_end"]))
         chosen["confidence"] = _confidence(chosen["score"], evidence=chosen["evidence"])

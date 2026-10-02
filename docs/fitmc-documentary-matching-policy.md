@@ -59,3 +59,24 @@ A generic match should only be accepted after the specific search fails.
 The existing voiceover timeline is authoritative. Do not rebuild, move, trim,
 or replace the voiceover. Place selected footage on video tracks over the exact
 record-time range of the narration segment.
+
+## Mandatory frame uniqueness
+
+No frame may be reused in another shot. The same file may supply multiple shots
+only when their full displayed source-frame ranges are disjoint. Include pauses,
+merged narration fragments, and source/timeline FPS rounding in the reservation.
+An overlap score penalty does not satisfy this requirement: skip the candidate
+or stop for editorial review when no relevant unused source remains.
+
+Run the hard uniqueness check again after manual selections or duration edits,
+before placing video in Resolve. After placement, inspect actual source-frame
+ranges across the entire cut and confirm existing audio/other tracks are unchanged.
+
+Also check for repeated stills and inserts at different timestamps or in different
+files. The October 2026 FitMC revision found repeated group, farming, Wrath, and
+snowy-base stills embedded in Personal Story despite disjoint source ranges.
+Source interval validation cannot detect those; displayed-image review is required.
+Sampled comparisons can flag repeats but are not an exhaustive frame-level proof.
+
+Keep the before/after audit and project backup locally in ignored reports; commit
+rules, reusable guards, repair tools, and regression tests, not cached media.
