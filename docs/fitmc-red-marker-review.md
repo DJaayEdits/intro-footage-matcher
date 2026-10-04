@@ -76,22 +76,36 @@ No project dependency or cached-analysis environment was changed.
 
 ## Validation and application status
 
-The reviewed plan contains 15 bounded V2 patches: 21 old shots become 22 shots,
-for 120 shots total. All unrelated current shot timings/source ranges are retained.
+The applied plan contains 16 bounded V2 patches. The initial 15 reviewed
+revisions were refreshed to preserve a manual split of the final shot, with an
+additional two-source-frame offset on its tail to avoid a shared boundary frame.
+The final timeline contains 121 V2 shots. All unrelated current shot timings/source ranges are retained.
 Full-plan source-frame uniqueness and source-duration checks pass. A 1,349-frame
-visual comparison at 2 fps flagged no repeated images below the configured mean
-pixel-difference threshold after the corrections. Sampling is not an exhaustive
+visual comparison at 2 fps flagged no repeated images before the final manual-split
+refresh. The post-placement comparison flagged the two adjoining pieces of the
+final camera pan as visually similar. Full-size frame inspection confirms
+different camera/star positions within the same continuous shot, not a reused
+insert; their actual source-frame ranges are disjoint. Sampling is not an exhaustive
 proof that every decoded frame differs.
 
 The six editorial-patch regression cases and nine frame-usage cases pass.
 The full suite has 65 passes and the same pre-existing word-join fixture failure
 in `test_word_timestamps_split_long_single_segment_at_internal_pause`.
 
-**Prepared, pending execution in Resolve Py3.** The executor exports a project
-backup before deleting only the audited V2 items with non-ripple deletion. It
-checks the actual post-placement source frames, unchanged audio offsets/properties,
-all timeline/audio notes, other video tracks, and untouched V2 items. A timestamped
-receipt must report `verified` before this review is marked applied.
+**Applied and verified in Resolve on October 3, 2026.** The initial attempt
+stopped before editing because V2 had changed: the final shot had been split
+after the original audit. The refreshed snapshot confirmed all 136 A1 clips and
+audio offsets were unchanged. The plan retained that split and all other manual
+edits; the guard was not bypassed.
+
+Resolve completed all 16 patches and saved the project. The timestamped receipt
+reports `verified`, 121 V2 shots, zero actual source-frame overlaps, unchanged
+audio/annotations/other tracks, and unchanged unrelated V2 items. The project
+backup was exported before non-ripple V2 deletion. Original source chapter
+metadata is retained in that backup and the receipt. The receipt is
+`reports/fitmc-red-notes-receipt-20261003-233245.json`; its project backup is
+`reports/fitmc-before-red-notes-20261003-233245.drp`. Canonical placement reports
+now reflect the actual saved timeline and source-frame starts.
 
 Local ignored evidence lives in `reports/fitmc-red-marker-notes.json`,
 `fitmc-notes-current-audit.json`, `fitmc-red-notes-placement.json`, and
