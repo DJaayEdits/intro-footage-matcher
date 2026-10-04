@@ -41,3 +41,15 @@ CLIP similarity alone is insufficient. Removing duplicates must preserve relevan
 
 For FitMC, follow docs/fitmc-documentary-matching-policy.md. Preserve the existing
 A1 VO in Parker Wolf FitMC / MAIN SEQUENCE and place selected video on V2.
+
+## Red-marker review lessons
+
+Read docs/fitmc-red-marker-review.md before revising a marked rough cut. Match
+individual clauses and the actor/victim relationship, use the subject's own POV
+when discussing their videos, and reserve literal inserts for their named passage.
+Multiple video shots may cover one phrase; several short beats may share one
+coherent shot. Align changes with cached word timestamps and preserve the VO.
+Preserve current manual video edits and user markers. Verify identities from
+original source evidence; do not label an unknown player from their skin alone.
+When authorized, download only missing supplemental sources and record provenance;
+probe their FPS/duration without rebuilding existing analysis or embeddings.

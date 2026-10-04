@@ -80,3 +80,18 @@ Sampled comparisons can flag repeats but are not an exhaustive frame-level proof
 
 Keep the before/after audit and project backup locally in ignored reports; commit
 rules, reusable guards, repair tools, and regression tests, not cached media.
+
+
+## Clause-level review and pacing
+
+Apply the user-reviewed rules in [FitMC red-marker review](fitmc-red-marker-review.md).
+A source filename or transcript score cannot replace visual verification of the
+actual selected range. Support each visible noun/action at its spoken timestamp,
+including who performs the action and who is affected. Split a beat when it names
+different subjects, and merge adjacent fragments when one continuous relevant
+sequence gives the passage a steadier pace. Reserve literal footage for its named
+passage, relocating earlier contextual use rather than repeating the footage.
+
+Red review notes remain attached to their original timeline positions. Apply
+bounded video-only patches against a fresh live audit, preserve unrelated manual
+edits, and confirm the saved post-placement receipt before claiming completion.
