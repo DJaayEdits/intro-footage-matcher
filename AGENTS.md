@@ -53,3 +53,20 @@ Preserve current manual video edits and user markers. Verify identities from
 original source evidence; do not label an unknown player from their skin alone.
 When authorized, download only missing supplemental sources and record provenance;
 probe their FPS/duration without rebuilding existing analysis or embeddings.
+
+## Second-pass timing and pacing
+
+Read docs/fitmc-timing-and-pacing-policy.md before refining an assembled cut.
+Keep the existing selections as editorial intent and reuse cached analysis.
+Listen to the actual edited dialogue; align subject changes to the first frame
+of their spoken trigger word. Motivate cuts by meaning, not elapsed duration.
+Selective holds into a new idea are allowed; same-phrase changes need tighter timing.
+Review full source ranges and exclude baked-in cuts, transitions, title cards
+and unrelated scenes. Extend clean footage first, then mild natural retiming,
+a clean readable freeze, relevant neighboring coverage, or removal.
+An intentional freeze within one shot is permitted, but its original source
+frame must not recur in another shot; retain provenance for derivative media.
+Recheck actual source-frame consumption after retiming or duration changes.
+Record review evidence and unresolved passages; documenting these rules does
+not establish that the existing timeline has passed them. Preserve the audio,
+user annotations, unrelated edits and source files using the existing guards.
