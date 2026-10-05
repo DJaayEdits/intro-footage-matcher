@@ -14,6 +14,11 @@ spoken edit and all audio tracks; adapt video around them. Preserve source media
 
 ## Meaning and timing
 
+Explicit user-marked hit frames take precedence over the audible-onset heuristic
+below. Follow [marker-guided timing](fitmc-marker-timing-policy.md) when manual
+markers demonstrate the user's intended timing. Preserve those markers and keep
+explicit instructions separate from inferred editorial choices.
+
 - Review at sentence, phrase and trigger-word levels. Each visual must reasonably
   represent the narration, including the correct subject and actor/victim roles.
 - When a word introduces the depicted subject, place the cut on the first timeline

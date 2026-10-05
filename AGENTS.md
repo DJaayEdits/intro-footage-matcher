@@ -70,3 +70,15 @@ Recheck actual source-frame consumption after retiming or duration changes.
 Record review evidence and unresolved passages; documenting these rules does
 not establish that the existing timeline has passed them. Preserve the audio,
 user annotations, unrelated edits and source files using the existing guards.
+
+## User-directed visual hits
+
+Read docs/fitmc-marker-timing-policy.md before a marker-guided refinement.
+Inventory every current timeline marker, preserve its exact contents and frame,
+and distinguish user instructions from generated metadata. An explicit user-marked
+visual hit overrides transcript alignment and inferred timing. Learn semantic
+patterns from demonstrated hits for unmarked passages, without inventing fixed
+shot lengths or cutting on every emphasized word. Adapt neighboring video around
+the chosen hit; keep audio locked. Report every marker's disposition separately
+from inferred edits and verify exact saved boundary frames. Documentation alone
+does not establish that markers were inspected or the timeline was changed.
