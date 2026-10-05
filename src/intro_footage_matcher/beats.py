@@ -64,20 +64,20 @@ def _split_segment(
             ):
                 units.append({
                     "start": current[0]["start"], "end": current[-1]["end"],
-                    "text": "".join(part["text"] for part in current).strip(),
+                    "text": " ".join(part["text"] for part in current).strip(),
                 })
                 current = []
             current.append(word)
             if re.search(r"[.!?][\"')\]]?$", word["text"].strip()):
                 units.append({
                     "start": current[0]["start"], "end": current[-1]["end"],
-                    "text": "".join(part["text"] for part in current).strip(),
+                    "text": " ".join(part["text"] for part in current).strip(),
                 })
                 current = []
         if current:
             units.append({
                 "start": current[0]["start"], "end": current[-1]["end"],
-                "text": "".join(part["text"] for part in current).strip(),
+                "text": " ".join(part["text"] for part in current).strip(),
             })
         return units
 

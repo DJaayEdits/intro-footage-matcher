@@ -1,0 +1,31 @@
+{
+  "project_name": "OPTIONAL - exact Resolve project name",
+  "timeline_name": "AI Rough Cut",
+  "replace_existing": false,
+  "source": "/absolute/path/to/Footage.mp4",
+  "start_timecode": "00:00:00:00",
+  "video_track": 1,
+  "audio_track": 1,
+  "video_track_name": "AI ROUGH CUT",
+  "audio_track_name": "AI ROUGH CUT AUDIO",
+  "cuts": [
+    {
+      "start_seconds": 134.2,
+      "end_seconds": 151.8,
+      "label": "Cut 01"
+    },
+    {
+      "start_seconds": 309.0,
+      "end_seconds": 326.4,
+      "label": "Cut 02"
+    },
+    {
+      "source": "/absolute/path/to/SecondFootage.mp4",
+      "start_seconds": 41.5,
+      "end_seconds": 53.2,
+      "video": true,
+      "audio": true,
+      "label": "Cut from second source"
+    }
+  ]
+}
